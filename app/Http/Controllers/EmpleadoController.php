@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empleado;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class EmpleadoController extends Controller
 {
@@ -14,7 +15,9 @@ class EmpleadoController extends Controller
      */
     public function index()
     {
-        //
+        // Get data from database
+        $datos['empleados'] = Empleado::paginate(5);
+        return view('empleado.index', $datos);
     }
 
     /**
@@ -38,10 +41,18 @@ class EmpleadoController extends Controller
     {
         //* Aqui se guarda los datos que vienen del form */
         // $datosEmpleado = request()->all();
+        // Se quita el campo token del form
         $datosEmpleado = request()->except('_token');
+
+        // Alterar la fotografia
+        if($request->hasFile('Foto')){
+            $datosEmpleado['Foto'] = $request->file('Foto')->store('uploads', 'public');
+        }
+
+
         // guardar en la db
         Empleado::insert($datosEmpleado);
-        return response()->json($datosEmpleado);
+        return redirect('empleado/')->with('message', 'Empleado agregado con exito');
     }
 
     /**
@@ -61,9 +72,11 @@ class EmpleadoController extends Controller
      * @param  \App\Models\Empleado  $empleado
      * @return \Illuminate\Http\Response
      */
-    public function edit(Empleado $empleado)
+    public function edit($id)
     {
-        //
+        //Get employer information form an id
+        $empleado = Empleado::findOrFail($id);
+        return view('empleado.edit', compact('empleado'));
     }
 
     /**
@@ -73,9 +86,26 @@ class EmpleadoController extends Controller
      * @param  \App\Models\Empleado  $empleado
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Empleado $empleado)
+    public function update(Request $request, $id)
     {
-        //
+        //update employee information from id
+        $datosEmpleado = request()->except(['_method', '_token']);
+
+         // Alterar la fotografia
+         if($request->hasFile('Foto')){
+            $empleado = Empleado::findOrFail($id);
+            // delete photo
+            Storage::delete('public/'.$empleado->Foto);
+            // upload new photo
+            $datosEmpleado['Foto'] = $request->file('Foto')->store('uploads', 'public');
+        }
+
+        Empleado::where('id', '=', $id)->update($datosEmpleado);
+
+        $empleado = Empleado::findOrFail($id);
+        return view('empleado.edit', compact('empleado'));
+        // $datosEmpleado = request()->all();
+        // return response()->json($datosEmpleado);
     }
 
     /**
@@ -84,8 +114,15 @@ class EmpleadoController extends Controller
      * @param  \App\Models\Empleado  $empleado
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Empleado $empleado)
+    public function destroy($id)
     {
-        //
+        $empleado = Empleado::findOrFail($id);
+        // img after all
+        if(Storage::delete('public/'.$empleado->Foto)){
+            // Delete employee
+            Empleado::destroy($id);
+        }
+        // after delete, i will return back
+        return redirect()->back();
     }
 }
