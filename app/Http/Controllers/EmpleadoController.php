@@ -16,7 +16,7 @@ class EmpleadoController extends Controller
     public function index()
     {
         // Get data from database
-        $datos['empleados'] = Empleado::paginate(5);
+        $datos['empleados'] = Empleado::paginate(1);
         return view('empleado.index', $datos);
     }
 
@@ -39,6 +39,25 @@ class EmpleadoController extends Controller
      */
     public function store(Request $request)
     {
+
+        /**
+         * Validate empy fields
+         */
+        $campos = [
+            'Nombre' => 'required|string|max:100',
+            'ApellidoPaterno' => 'required|string|max:100',
+            'ApellidoMaterno' => 'required|string|max:100',
+            'Correo' => 'required|email',
+            // 'Foto' => 'required|max:10000|mines:jpeg,png,jpg',
+        ];
+        // messages
+        $mensajes = [
+            'required' => 'El :attribute es requerido',
+            // 'Foto.required' => 'La foto es requerida',
+        ];
+
+        $this->validate($request, $campos, $mensajes);
+
         //* Aqui se guarda los datos que vienen del form */
         // $datosEmpleado = request()->all();
         // Se quita el campo token del form
@@ -54,7 +73,6 @@ class EmpleadoController extends Controller
         Empleado::insert($datosEmpleado);
         return redirect('empleado/')->with('message', 'Empleado agregado con exito');
     }
-
     /**
      * Display the specified resource.
      *
@@ -88,6 +106,29 @@ class EmpleadoController extends Controller
      */
     public function update(Request $request, $id)
     {
+        /**
+         * Validate empy fields
+         */
+        $campos = [
+            'Nombre' => 'required|string|max:100',
+            'ApellidoPaterno' => 'required|string|max:100',
+            'ApellidoMaterno' => 'required|string|max:100',
+            'Correo' => 'required|email',
+        ];
+        // messages
+        $mensajes = [
+            'required' => 'El :attribute es requerido',
+        ];
+
+        // if($request->hasFile('Foto')){
+        //     $campos = ['Foto' => 'required|max:10000|mines:jpeg,png,jpg'];
+        //     $mensajes = ['Foto.required' => 'La foto es requerida'];
+        // }
+
+
+        $this->validate($request, $campos, $mensajes);
+
+
         //update employee information from id
         $datosEmpleado = request()->except(['_method', '_token']);
 
@@ -96,6 +137,7 @@ class EmpleadoController extends Controller
             $empleado = Empleado::findOrFail($id);
             // delete photo
             Storage::delete('public/'.$empleado->Foto);
+
             // upload new photo
             $datosEmpleado['Foto'] = $request->file('Foto')->store('uploads', 'public');
         }
@@ -103,7 +145,8 @@ class EmpleadoController extends Controller
         Empleado::where('id', '=', $id)->update($datosEmpleado);
 
         $empleado = Empleado::findOrFail($id);
-        return view('empleado.edit', compact('empleado'));
+        // return view('empleado.edit', compact('empleado'));
+        return redirect('empleado/')->with('message', 'Empleado editado con exito');
         // $datosEmpleado = request()->all();
         // return response()->json($datosEmpleado);
     }
@@ -123,6 +166,6 @@ class EmpleadoController extends Controller
             Empleado::destroy($id);
         }
         // after delete, i will return back
-        return redirect()->back();
+        return redirect()->back()->with('message', 'Empleado eliminado exitosamente');
     }
 }

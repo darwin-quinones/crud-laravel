@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmpleadoController;
+use App\Models\Empleado;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,7 +16,7 @@ use App\Http\Controllers\EmpleadoController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 });
 
 // example of how to access routes
@@ -31,6 +32,16 @@ Route::get('/', function () {
 
  /**
   * access to all empleados routes
+  note : middleware('auth') forces user authentication
   */
+  Route::resource('empleado', EmpleadoController::class)->middleware('auth');
 
-  Route::resource('empleado', EmpleadoController::class);
+Auth::routes(['reset' => false, 'register' => false]);
+
+// cambiar ela redireccion de las vistas
+
+
+Route::get('/home', [EmpleadoController::class, 'index'])->name('home');
+Route::group(['middlewere' => 'auth'], function(){
+    Route::get('/', [EmpleadoController::class, 'index'])->name('home');
+});
