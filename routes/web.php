@@ -41,7 +41,7 @@ Auth::routes(['reset' => false, 'register' => false]);
 // cambiar ela redireccion de las vistas
 
 
-Route::get('/home', [EmpleadoController::class, 'index'])->name('home');
+Route::get('/home', [EmpleadoController::class, 'index'])->middleware('auth')->name('home');
 Route::group(['middlewere' => 'auth'], function(){
-    Route::get('/', [EmpleadoController::class, 'index'])->name('home');
+    Route::get('/', [EmpleadoController::class, 'index'])->middleware('auth')->name('home');
 });
